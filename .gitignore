@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Node/NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build and Dist
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Environment Variables — keep .env.example tracked!
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# Docker
+docker-compose.override.yml
+.docker/
+postgres_data/
+redis_data/
+
+# Logs
+logs/
+*.log
+
+# Prisma
+# prisma/generated/
+
+# OS / System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
