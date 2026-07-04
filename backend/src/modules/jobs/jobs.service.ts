@@ -77,11 +77,21 @@ export class JobsService {
     return this.prisma.job.update({ where: { id }, data: { status: 'ARCHIVED' } });
   }
 
-  async findByCompany(employerId: string) {
-    return this.prisma.job.findMany({
-      where: { company: { userId: employerId } },
-      include: { category: true, _count: { select: { applications: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findByCompany(employerId: string, query?: QueryJobsDto) {
+    const pageNum = Number(query?.page) || 1;
+    const limitNum = Number(query?.limit) || 20;
+    
+    const [items, total] = await Promise.all([
+      this.prisma.job.findMany({
+        where: { company: { userId: employerId } },
+        include: { category: true, _count: { select: { applications: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+      }),
+      this.prisma.job.count({ where: { company: { userId: employerId } } }),
+    ]);
+
+    return { items, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) };
   }
 }

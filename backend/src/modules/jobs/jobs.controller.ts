@@ -22,8 +22,8 @@ export class JobsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('EMPLOYER', 'ADMIN')
   @ApiBearerAuth()
-  myJobs(@CurrentUser() user: CurrentUserPayload) {
-    return this.svc.findByCompany(user.userId);
+  myJobs(@CurrentUser() user: CurrentUserPayload, @Query() query: QueryJobsDto) {
+    return this.svc.findByCompany(user.userId, query);
   }
 
   @Get('categories')
