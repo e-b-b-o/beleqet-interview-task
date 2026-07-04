@@ -382,5 +382,31 @@ Endpoints verified:
 | Swagger docs | ✅ Available | `/api/docs` accessible in development mode |
 | Secret management | ✅ Correct | All config via `ConfigService`, `.env.example` provided |
 | Git cleanliness | ✅ Clean | 115 tracked files, 238 KiB pack, no build artifacts |
-| Frontend ↔ Backend | ⚠️ Not wired | Frontend is a static prototype; CORS is correctly configured |
+| Frontend ↔ Backend | ✅ Wired | Frontend uses real REST API calls, no mock data |
 | New feature module | ✅ Done | Profile boost module complete |
+
+## Phase 3: Frontend Integration
+
+**Status:** ✅ Complete
+
+1. **Database Seeding:**
+   - Created `backend/prisma/seed.ts` to populate realistic data (Categories, Companies, Jobs, Users).
+   - Modified `.env` database URL port to 5433 to map to the correctly exposed Docker Postgres port for local execution.
+   
+2. **API Utility:**
+   - Implemented `lib/api.ts` utilizing native Next.js `fetch` with Next 14 App Router caching/revalidation capabilities.
+   - Pointed client and server components to `NEXT_PUBLIC_API_URL` (`http://localhost:4000/api/v1`).
+   
+3. **Mock Data Removal:**
+   - Refactored `FeaturedJobs`, `CategoryGrid`, `JobsListing`, and `JobDetailPage` to use live backend API responses.
+   - Deleted `lib/mockData.ts` entirely.
+   - Hardcoded previously mock UI elements (stats bar, popular searches) as UI-specific constants in their respective components.
+
+4. **Authentication Flow Implementation:**
+   - Created a robust `AuthContext` to persist tokens in `localStorage` and handle `/auth/me` validation on mount.
+   - Built `/login` and `/register` UI pages mirroring the brand aesthetic.
+   - Protected the `/post-job` page and verified proper token attachment in API calls, ensuring only users with the `EMPLOYER` role can submit jobs.
+
+5. **State Management & UI Polish:**
+   - Handled robust loading states and error states during API fetching.
+   - Handled UI formatting mappings for schema Enums (e.g., `FULL_TIME` to `Full Time`).
