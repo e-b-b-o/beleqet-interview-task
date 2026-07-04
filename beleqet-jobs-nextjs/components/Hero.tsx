@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, MapPin, ShieldCheck, BellRing, Send } from "lucide-react";
-import { popularSearches } from "@/lib/mockData";
+
+const popularSearches = ["Developer", "Marketing", "Designer", "Accounting", "Sales", "Remote"];
 
 export default function Hero() {
   const router = useRouter();
@@ -102,10 +103,12 @@ export default function Hero() {
         </div>
 
         <div className="relative hidden md:block">
-          <div className="aspect-[4/5] rounded-3xl bg-gradient-to-b from-white/10 to-transparent border border-white/10 flex items-end justify-center overflow-hidden">
-            <div className="w-2/3 mb-0 rounded-t-3xl bg-white/5 h-3/4 flex items-center justify-center text-white/30 text-sm">
-              Mobile app preview
-            </div>
+          <div className="aspect-[4/5] rounded-3xl bg-gradient-to-b from-white/10 to-transparent border border-white/10 flex items-end justify-center overflow-hidden p-4 pb-0">
+            <img 
+              src="/mobile-preview.png" 
+              alt="Beleqet Mobile App Preview" 
+              className="w-full h-full object-cover rounded-t-2xl border-x border-t border-white/20 shadow-2xl"
+            />
           </div>
           <div className="absolute top-6 -left-6 rounded-xl bg-white text-ink px-4 py-3 shadow-cardHover text-xs w-44">
             <p className="font-semibold flex items-center gap-1.5">
