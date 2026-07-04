@@ -1,58 +1,130 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding Beleqet database...');
+  console.log('Seeding database...');
 
-  // ── Job Categories ─────────────────────────────────────────────────────────
-  const rawJobCategories = [
-    "Accounting And Finance", "Advisory And Consultancy", "Aeronautics And Aerospace",
-    "Agriculture", "Architecture And Urban Planning", "Beauty And Grooming",
-    "Broker And Case Closer", "Business And Commerce", "Chemical And Biomedical Engineering",
-    "Clothing And Textile", "Construction And Civil Engineering", "Creative Art And Design",
-    "Customer Service And Care", "Data Mining And Analytics", "Documentation And Writing Services",
-    "Entertainment", "Environmental And Energy Engineering", "Event Management And Organization",
-    "Fashion Design", "Food And Drink Preparation Or Service", "Gardening And Landscaping",
-    "Health Care", "Horticulture", "Hospitality And Tourism", "Human Resource And Talent Management",
-    "Information Technology", "Installation And Maintenance Technician", "Janitorial And Other Office Services",
-    "Labor Work And Masonry", "Law", "Livestock And Animal Husbandry", "Logistic And Supply Chain",
-    "Manufacturing And Production", "Marketing And Advertisement", "Mechanical And Electrical Engineering",
-    "Media And Communication", "Multimedia Content Production", "Pharmaceutical",
-    "Project Management And Administration", "Psychiatry, Psychology And Social Work",
-    "Purchasing And Procurement", "Research And Data Analytics", "Sales And Promotion",
-    "Secretarial And Office Management", "Security And Safety", "Shop And Office Attendant",
-    "Software Design And Development", "Teaching And Tutor", "Training And Consultancy",
-    "Training And Mentorship", "Translation And Transcription", "Transportation",
-    "Transportation And Delivery", "Veterinary", "Woodwork And Carpentry"
+  // Clean up
+  await prisma.notification.deleteMany();
+  await prisma.profileBoostReport.deleteMany();
+  await prisma.candidateScore.deleteMany();
+  await prisma.application.deleteMany();
+  await prisma.eventLog.deleteMany();
+  await prisma.job.deleteMany();
+  await prisma.jobCategory.deleteMany();
+  await prisma.company.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Create Categories
+  const categories = [
+    { slug: 'it-software', label: 'IT & Software', icon: 'laptop' },
+    { slug: 'marketing', label: 'Marketing', icon: 'megaphone' },
+    { slug: 'finance', label: 'Finance', icon: 'landmark' },
+    { slug: 'health', label: 'Health', icon: 'heart-pulse' },
+    { slug: 'education', label: 'Education', icon: 'graduation-cap' },
+    { slug: 'engineering', label: 'Engineering', icon: 'cog' },
+    { slug: 'other', label: 'Other', icon: 'more-horizontal' },
   ];
 
-  const categories = await Promise.all(
-    rawJobCategories.map(cat => {
-      const slug = cat.toLowerCase().replace(/[, ]+/g, '-').replace(/-+$/g, '');
-      return prisma.jobCategory.upsert({
-        where: { slug },
-        update: {},
-        create: { slug, label: cat, icon: 'briefcase' } // generic icon as default
-      });
-    })
-  );
-  console.log('✅ Job categories created');
+  const categoryMap: Record<string, any> = {};
+  for (const cat of categories) {
+    categoryMap[cat.slug] = await prisma.jobCategory.create({ data: cat });
+  }
 
-  // ── Freelance Categories ───────────────────────────────────────────────────
-  await Promise.all([
-    prisma.freelanceCategory.upsert({ where: { slug: 'graphic-design' },    update: {}, create: { slug: 'graphic-design',    label: 'Graphic Design',      icon: 'palette' } }),
-    prisma.freelanceCategory.upsert({ where: { slug: 'web-development' },   update: {}, create: { slug: 'web-development',   label: 'Web Development',     icon: 'code-2' } }),
-    prisma.freelanceCategory.upsert({ where: { slug: 'digital-marketing' }, update: {}, create: { slug: 'digital-marketing', label: 'Digital Marketing',   icon: 'megaphone' } }),
-    prisma.freelanceCategory.upsert({ where: { slug: 'video-animation' },   update: {}, create: { slug: 'video-animation',   label: 'Video & Animation',   icon: 'clapperboard' } }),
-    prisma.freelanceCategory.upsert({ where: { slug: 'writing' },           update: {}, create: { slug: 'writing',           label: 'Writing & Translation', icon: 'pen-line' } }),
-  ]);
-  console.log('✅ Freelance categories created');
+  // Create Users (Employers)
+  const employers = [
+    { email: 'hr@takacash.com', name: 'TakaCash', role: 'EMPLOYER' },
+    { email: 'careers@ethiotelecom.et', name: 'ethio telecom', role: 'EMPLOYER' },
+    { email: 'jobs@dashenbank.com', name: 'Dashen Bank', role: 'EMPLOYER' },
+  ];
 
-  console.log('\n🎉 Database seeded successfully with Production Categories!');
+  const employerMap: Record<string, any> = {};
+  for (const emp of employers) {
+    const user = await prisma.user.create({
+      data: {
+        email: emp.email,
+        passwordHash: crypto.createHash('sha256').update('password123').digest('hex'),
+        firstName: 'Admin',
+        lastName: emp.name,
+        role: 'EMPLOYER',
+        isActive: true,
+        emailVerified: true,
+      }
+    });
+
+    const company = await prisma.company.create({
+      data: {
+        name: emp.name,
+        userId: user.id,
+        verified: true,
+      }
+    });
+    employerMap[emp.name] = company;
+  }
+
+  // Create Jobs
+  const jobsData = [
+    {
+      title: "Full Stack Developer",
+      company: "TakaCash",
+      location: "Addis Ababa",
+      type: "FULL_TIME",
+      categorySlug: "it-software",
+      status: "PUBLISHED",
+      featured: true,
+      tags: ["React", "Node.js", "PostgreSQL"],
+      description: "TakaCash is looking for a Full Stack Developer to build and maintain customer-facing fintech products. You will work across our Next.js front end and Node services, ship features end to end, and collaborate closely with product and design.",
+    },
+    {
+      title: "Digital Marketing Specialist",
+      company: "ethio telecom",
+      location: "Addis Ababa",
+      type: "HYBRID",
+      categorySlug: "marketing",
+      status: "PUBLISHED",
+      featured: true,
+      tags: ["SEO", "Paid Ads", "Content"],
+      description: "Plan and execute digital campaigns across search, social, and Telegram channels. Own performance reporting and work with the brand team to grow qualified leads.",
+    },
+    {
+      title: "Customer Service Agent",
+      company: "Dashen Bank",
+      location: "Addis Ababa",
+      type: "FULL_TIME",
+      categorySlug: "finance",
+      status: "PUBLISHED",
+      featured: true,
+      tags: ["Customer Care", "Banking"],
+      description: "Handle customer inquiries across branch and digital channels, resolve account issues, and maintain Dashen Bank's service standards.",
+    }
+  ];
+
+  for (const job of jobsData) {
+    await prisma.job.create({
+      data: {
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        type: job.type as any,
+        status: job.status as any,
+        featured: job.featured,
+        tags: job.tags,
+        categoryId: categoryMap[job.categorySlug].id,
+        companyId: employerMap[job.company].id,
+      }
+    });
+  }
+
+  console.log('Seeding completed!');
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
