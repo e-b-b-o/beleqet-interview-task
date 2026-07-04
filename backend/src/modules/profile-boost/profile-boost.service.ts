@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { QUEUE_NAMES, PROFILE_BOOST_JOBS } from '../queues/queues.constants';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RequestProfileBoostDto } from './dto/request-profile-boost.dto';
 
 @Injectable()
 export class ProfileBoostService {
@@ -13,7 +14,7 @@ export class ProfileBoostService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async queueAnalysis(userId: string) {
+  async queueAnalysis(userId: string, dto?: RequestProfileBoostDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new Error('User not found');
@@ -24,6 +25,8 @@ export class ProfileBoostService {
       headline: user.headline,
       bio: user.bio,
       skills: user.skills,
+      targetJobTitle: dto?.targetJobTitle,
+      focusArea: dto?.focusArea,
     });
 
     this.logger.log(`Queued profile boost analysis for user ${userId}`);

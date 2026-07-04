@@ -13,6 +13,8 @@ interface AnalyzeProfilePayload {
   headline: string | null;
   bio: string | null;
   skills: string[];
+  targetJobTitle?: string;
+  focusArea?: string;
 }
 
 interface AiProfileScoreResult {
@@ -87,6 +89,8 @@ Always respond ONLY with valid JSON.`;
 Headline: ${input.headline ?? 'None'}
 Bio: ${input.bio ?? 'None'}
 Skills: ${input.skills?.join(', ') ?? 'None'}
+Target Job Title: ${input.targetJobTitle ?? 'Not specified'}
+Focus Area: ${input.focusArea ?? 'Not specified'}
 
 Score this profile (0-100) and return JSON with exactly this shape:
 {
