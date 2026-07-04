@@ -1,39 +1,80 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Search, MapPin, SlidersHorizontal } from "lucide-react";
-import { jobs, categories } from "@/lib/mockData";
 import JobCard from "@/components/JobCard";
+import { fetchJobs, fetchCategories } from "@/lib/api";
 
-const jobTypes = ["Full Time", "Part Time", "Remote", "Hybrid", "On-site", "Contract"];
+const jobTypes = [
+  { label: "Full Time", value: "FULL_TIME" },
+  { label: "Part Time", value: "PART_TIME" },
+  { label: "Remote", value: "REMOTE" },
+  { label: "Hybrid", value: "HYBRID" },
+  { label: "Contract", value: "CONTRACT" }
+];
 
 export default function JobsListing() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [location, setLocation] = useState(searchParams.get("loc") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [type, setType] = useState<string>("");
 
-  const filtered = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchesQuery =
-        !query ||
-        job.title.toLowerCase().includes(query.toLowerCase()) ||
-        job.company.toLowerCase().includes(query.toLowerCase());
-      const matchesLocation = !location || job.location.toLowerCase().includes(location.toLowerCase());
-      const matchesCategory = !category || job.category === category;
-      const matchesType = !type || job.type === type;
-      return matchesQuery && matchesLocation && matchesCategory && matchesType;
-    });
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(false);
+      try {
+        const [jobsData, catsData] = await Promise.all([
+          fetchJobs({
+            q: query,
+            location: location,
+            category: category,
+            type: type
+          }),
+          fetchCategories()
+        ]);
+        setJobs(jobsData.items || []);
+        setCategories(catsData || []);
+      } catch (err) {
+        console.error("Failed to load data", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    const delayDebounceFn = setTimeout(() => {
+      loadData();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [query, location, category, type]);
+
+  const updateURL = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set(key, value);
+    else params.delete(key);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleCategoryChange = (val: string) => {
+    setCategory(val);
+    updateURL("category", val);
+  };
 
   return (
     <div className="container-page py-10">
       <div className="mb-6">
         <h1 className="text-pageH1">Search verified jobs from trusted employers.</h1>
-        <p className="text-muted text-sm mt-2">{filtered.length} jobs found</p>
+        {!loading && !error && <p className="text-muted text-sm mt-2">{jobs.length} jobs found</p>}
       </div>
 
       <div className="bg-white rounded-2xl border border-border p-2 flex flex-col sm:flex-row gap-2 mb-8">
@@ -41,7 +82,10 @@ export default function JobsListing() {
           <Search className="h-4 w-4 text-muted shrink-0" />
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              updateURL("q", e.target.value);
+            }}
             placeholder="Job title, keyword or company"
             className="w-full text-sm text-ink placeholder:text-muted outline-none"
           />
@@ -51,7 +95,10 @@ export default function JobsListing() {
           <MapPin className="h-4 w-4 text-muted shrink-0" />
           <input
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              updateURL("loc", e.target.value);
+            }}
             placeholder="Location"
             className="w-full text-sm text-ink placeholder:text-muted outline-none"
           />
@@ -66,23 +113,23 @@ export default function JobsListing() {
             </h3>
             <div className="space-y-2">
               <button
-                onClick={() => setCategory("")}
+                onClick={() => handleCategoryChange("")}
                 className={`block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${
                   category === "" ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                 }`}
               >
                 All Categories
               </button>
-              {categories.map((cat) => (
+              {categories.map((cat: any) => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategory(cat.id)}
+                  onClick={() => handleCategoryChange(cat.slug)}
                   className={`flex w-full items-center justify-between text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                    category === cat.id ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
+                    category === cat.slug ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
                   <span>{cat.label}</span>
-                  <span className="text-xs">{cat.count}</span>
+                  <span className="text-xs">{cat._count?.jobs || 0}</span>
                 </button>
               ))}
             </div>
@@ -101,13 +148,13 @@ export default function JobsListing() {
               </button>
               {jobTypes.map((t) => (
                 <button
-                  key={t}
-                  onClick={() => setType(t)}
+                  key={t.value}
+                  onClick={() => setType(t.value)}
                   className={`block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                    type === t ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
+                    type === t.value ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
-                  {t}
+                  {t.label}
                 </button>
               ))}
             </div>
@@ -115,14 +162,18 @@ export default function JobsListing() {
         </aside>
 
         <div>
-          {filtered.length === 0 ? (
+          {loading ? (
+             <div className="py-20 text-center text-muted">Loading jobs...</div>
+          ) : error ? (
+             <div className="py-20 text-center text-red-500">Failed to load jobs. Please try again.</div>
+          ) : jobs.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-white p-12 text-center">
               <p className="text-ink font-semibold">No jobs match your filters</p>
               <p className="text-sm text-muted mt-1">Try adjusting your search or clearing filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filtered.map((job) => (
+              {jobs.map((job: any) => (
                 <JobCard key={job.id} job={job} />
               ))}
             </div>
