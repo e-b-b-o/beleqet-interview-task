@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/authContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("hr@takacash.com");
@@ -39,53 +40,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container-page py-16 flex items-center justify-center min-h-[70vh]">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-border p-8 shadow-cardHover">
-        <h1 className="text-2xl font-bold text-ink text-center mb-6">Welcome Back</h1>
-        
-        {error && (
-          <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg mb-4 text-center">
-            {error}
-          </div>
-        )}
+    <div className="min-h-screen bg-pageBg flex flex-col relative">
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-brandGreen transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-border">
+          <ArrowLeft className="h-4 w-4" /> Back to Home
+        </Link>
+      </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="text-xs font-semibold text-ink">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-border px-3 py-2.5 text-sm outline-none focus:border-brandGreen"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-ink">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-border px-3 py-2.5 text-sm outline-none focus:border-brandGreen"
-              required
-            />
-          </div>
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-border p-8 sm:p-10 shadow-cardHover">
+          <h1 className="text-2xl font-extrabold text-ink text-center mb-6">Welcome Back</h1>
           
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-full bg-brandGreen text-white text-sm font-semibold py-3 hover:bg-darkGreen transition-colors disabled:opacity-50"
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        
-        <p className="mt-6 text-center text-sm text-muted">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-brandGreen hover:underline font-semibold">
-            Sign up
-          </Link>
-        </p>
+          {error && (
+            <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg mb-4 text-center border border-red-100">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-ink">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:border-brandGreen transition-colors"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-ink">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-border px-4 py-3 text-sm outline-none focus:border-brandGreen transition-colors"
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full rounded-full bg-brandGreen text-white text-sm font-semibold py-3.5 hover:bg-darkGreen transition-colors disabled:opacity-50 mt-2"
+            >
+              {isLoading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+          
+          <p className="mt-8 text-center text-sm text-muted">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-brandGreen hover:underline font-semibold">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
