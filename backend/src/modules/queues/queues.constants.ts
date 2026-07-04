@@ -11,6 +11,7 @@ export const QUEUE_NAMES = {
   WALLET:        'wallet',
   SEARCH_INDEX:  'search-index',
   SCHEDULED:     'scheduled',
+  PROFILE_BOOST: 'profile-boost',
 } as const;
 
 // ── Application workflow jobs ─────────────────────────────────────────────
@@ -44,6 +45,12 @@ export const ESCROW_JOBS = {
   PROCESS_WEBHOOK:    'process-payment-webhook',
   AUTO_RELEASE:       'auto-release-milestone',  // 14-day auto-approval
   PROCESS_WITHDRAWAL: 'process-wallet-withdrawal',
+} as const;
+
+// ── Profile Boost jobs ────────────────────────────────────────────────────
+
+export const PROFILE_BOOST_JOBS = {
+  ANALYZE_PROFILE: 'analyze-profile',
 } as const;
 
 // ── Scoring thresholds ────────────────────────────────────────────────────

@@ -42,6 +42,7 @@ model User {
   notifications         Notification[]
   refreshTokens         RefreshToken[]
   verificationTokens    VerificationToken[]
+  profileBoostReports   ProfileBoostReport[]
 
   @@map("users")
 }
@@ -527,4 +528,20 @@ enum NotificationChannel {
   IN_APP
   TELEGRAM
   EMAIL
+}
+
+model ProfileBoostReport {
+  id              String   @id @default(uuid())
+  userId          String
+  score           Int
+  feedback        String
+  missingSkills   String[]
+  headlineSuggest String?
+  bioSuggest      String?
+  rawAiResponse   Json?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("profile_boost_reports")
 }
