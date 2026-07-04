@@ -44,16 +44,15 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-pageBg flex flex-col relative">
-      <div className="absolute top-6 left-6 sm:top-8 sm:left-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-brandGreen transition-colors bg-white px-4 py-2 rounded-full shadow-sm border border-border">
+    <div className="min-h-screen bg-pageBg flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mb-4">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-ink transition-colors px-1">
           <ArrowLeft className="h-4 w-4" /> Back to Home
         </Link>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl border border-border p-8 sm:p-10 shadow-cardHover">
-          <h1 className="text-2xl font-extrabold text-ink text-center mb-6">Create an Account</h1>
+      <div className="w-full max-w-md bg-white rounded-3xl border border-border p-8 sm:p-10 shadow-cardHover">
+        <h1 className="text-2xl font-extrabold text-ink text-center mb-6">Create an Account</h1>
           
           {error && (
             <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg mb-4 text-center border border-red-100">
@@ -132,7 +131,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         </div>
-      </div>
     </div>
   );
 }

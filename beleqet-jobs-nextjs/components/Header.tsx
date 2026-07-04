@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 
 const navItems = [
@@ -13,6 +14,11 @@ const navItems = [
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+
+  if (pathname === "/login" || pathname === "/register") {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-border">

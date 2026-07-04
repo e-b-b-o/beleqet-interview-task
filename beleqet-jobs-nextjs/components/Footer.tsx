@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const footerColumns = [
   {
@@ -31,6 +34,12 @@ const footerColumns = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname === "/login" || pathname === "/register") {
+    return null;
+  }
+
   return (
     <footer className="bg-primary text-white">
       <div className="container-page py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
