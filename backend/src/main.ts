@@ -17,8 +17,27 @@ async function bootstrap() {
 
   // ── Security ──────────────────────────────────────────────────────────────
   app.use(helmet());
+
+  // Build an allowed origins list from FRONTEND_URL (supports comma-separated values)
+  const frontendUrl = configService.get<string>('FRONTEND_URL', '');
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    ...frontendUrl
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean),
+  ];
+
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:3000'),
+    origin: (origin, callback) => {
+      // Allow server-to-server (no origin) and any explicitly listed origin
+      if (!origin || allowedOrigins.some(o => origin === o || origin.endsWith('.vercel.app'))) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: ${origin} not allowed`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   });
@@ -73,9 +92,10 @@ async function bootstrap() {
   // ── Graceful shutdown ─────────────────────────────────────────────────────
   app.enableShutdownHooks();
 
-  await app.listen(port);
-  logger.log(`🚀 Beleqet API running on http://localhost:${port}/api/v1`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`🚀 Beleqet API running → http://0.0.0.0:${port}/api/v1`);
   logger.log(`   Environment: ${nodeEnv}`);
+  logger.log(`   Allowed origins: ${allowedOrigins.join(', ')} + *.vercel.app`);
 }
 
 bootstrap().catch((err) => {
