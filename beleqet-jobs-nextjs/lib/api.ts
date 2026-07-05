@@ -11,7 +11,9 @@
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ||
-  'http://localhost:4000/api/v1';
+  (process.env.NODE_ENV === 'production'
+    ? 'https://beleqet-interview-task-1-bt16.onrender.com/api/v1'
+    : 'http://127.0.0.1:4000/api/v1');
 
 // ─── Jobs ──────────────────────────────────────────────────────────────────
 
