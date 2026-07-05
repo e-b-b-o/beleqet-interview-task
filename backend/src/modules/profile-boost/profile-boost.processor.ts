@@ -81,58 +81,22 @@ export class ProfileBoostProcessor {
   }
 
   private async runAiAnalysis(input: AnalyzeProfilePayload): Promise<AiProfileScoreResult> {
-    const systemPrompt = `You are an expert career coach for the Ethiopian job market.
-Your task is to analyze a candidate's profile and provide actionable feedback.
-Always respond ONLY with valid JSON.`;
+    this.logger.log(`[mock-ai] Simulating AI analysis for profile...`);
+    
+    // Simulate slight delay to mimic AI processing time
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const userPrompt = `
-Headline: ${input.headline ?? 'None'}
-Bio: ${input.bio ?? 'None'}
-Skills: ${input.skills?.join(', ') ?? 'None'}
-Target Job Title: ${input.targetJobTitle ?? 'Not specified'}
-Focus Area: ${input.focusArea ?? 'Not specified'}
+    const hasSkills = input.skills && input.skills.length > 0;
+    const score = hasSkills ? 70 + Math.floor(Math.random() * 20) : 55;
 
-Score this profile (0-100) and return JSON with exactly this shape:
-{
-  "score": <number 0-100>,
-  "feedback": "<2-3 sentence overall feedback>",
-  "missingSkills": ["skill1", "skill2"],
-  "headlineSuggest": "<Suggested professional headline>",
-  "bioSuggest": "<Suggested professional bio>"
-}
-`;
-
-    try {
-      const completion = await this.openai.chat.completions.create({
-        model: this.config.get<string>('OPENAI_MODEL', 'gpt-4o-mini'),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: userPrompt },
-        ],
-        temperature: 0.2,
-        max_tokens: 400,
-        response_format: { type: 'json_object' },
-      });
-
-      const raw = completion.choices[0]?.message?.content ?? '{}';
-      const parsed = JSON.parse(raw) as AiProfileScoreResult;
-
-      return {
-        score: Math.min(100, Math.max(0, parsed.score ?? 50)),
-        feedback: parsed.feedback ?? 'Your profile needs more details.',
-        missingSkills: parsed.missingSkills ?? [],
-        headlineSuggest: parsed.headlineSuggest ?? null,
-        bioSuggest: parsed.bioSuggest ?? null,
-      };
-    } catch (err) {
-      this.logger.warn(`OpenAI call failed, using fallback scoring: ${(err as Error).message}`);
-      return {
-        score: 60,
-        feedback: 'AI analysis unavailable. We recommend adding more skills and a detailed bio.',
-        missingSkills: ['Communication', 'Teamwork'],
-        headlineSuggest: input.headline ?? 'Experienced Professional',
-        bioSuggest: input.bio ?? 'Passionate professional looking for new opportunities.',
-      };
-    }
+    return {
+      score,
+      feedback: "This is a simulated AI feedback. Your profile looks solid, but expanding your bio and adding specific technical skills could increase your visibility.",
+      missingSkills: ["Leadership", "Agile Methodologies", "Cloud Computing"].filter(s => !(input.skills || []).includes(s)),
+      headlineSuggest: input.headline ? `Senior ${input.headline.replace('Senior ', '')}` : "Dedicated Professional Seeking Opportunities",
+      bioSuggest: input.bio 
+        ? `Enhanced version of your bio: ${input.bio} I thrive in collaborative environments and am committed to continuous learning.`
+        : "A results-driven professional with a passion for excellence and a track record of delivering high-quality work. Eager to bring my skills to a dynamic team.",
+    };
   }
 }

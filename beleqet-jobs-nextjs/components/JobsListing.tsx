@@ -128,8 +128,10 @@ export default function JobsListing() {
                     category === cat.slug ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
-                  <span>{cat.label}</span>
-                  <span className="text-xs">{cat._count?.jobs || 0}</span>
+                  <span className="text-ink font-medium">{cat.label}</span>
+                  <span className="bg-brandGreen/10 text-brandGreen px-2 py-0.5 rounded-full text-xs font-semibold">
+                    {cat.jobCount || 0}
+                  </span>
                 </button>
               ))}
             </div>

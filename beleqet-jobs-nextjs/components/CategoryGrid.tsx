@@ -64,7 +64,7 @@ export default async function CategoryGrid() {
                 <Icon className="h-4.5 w-4.5" />
               </span>
               <span className="text-xs font-semibold text-ink">{cat.label}</span>
-              <span className="text-[11px] text-muted">{cat._count?.jobs || 0} jobs</span>
+              <span className="text-[11px] text-muted">{cat.jobCount || 0} jobs</span>
             </Link>
           );
         })}

@@ -21,9 +21,21 @@ export class JobsService {
   }
 
   async getCategories() {
-    return this.prisma.jobCategory.findMany({
+    const categories = await this.prisma.jobCategory.findMany({
+      include: {
+        _count: {
+          select: { jobs: { where: { status: 'PUBLISHED' } } }
+        }
+      },
       orderBy: { label: 'asc' },
     });
+    return categories.map(cat => ({
+      id: cat.id,
+      slug: cat.slug,
+      label: cat.label,
+      icon: cat.icon,
+      jobCount: cat._count.jobs
+    }));
   }
 
   async findAll(query: QueryJobsDto) {
