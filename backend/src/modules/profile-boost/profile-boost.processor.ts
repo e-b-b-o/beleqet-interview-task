@@ -4,7 +4,7 @@ import { Job as BullJob } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+
 import { PrismaService } from '../../prisma/prisma.service';
 import { QUEUE_NAMES, PROFILE_BOOST_JOBS, NOTIFICATION_JOBS } from '../queues/queues.constants';
 
@@ -29,17 +29,12 @@ interface AiProfileScoreResult {
 @Processor(QUEUE_NAMES.PROFILE_BOOST)
 export class ProfileBoostProcessor {
   private readonly logger = new Logger(ProfileBoostProcessor.name);
-  private readonly openai: OpenAI;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private readonly notificationsQueue: Queue,
-  ) {
-    this.openai = new OpenAI({
-      apiKey: this.config.get<string>('OPENAI_API_KEY'),
-    });
-  }
+  ) {}
 
   @Process(PROFILE_BOOST_JOBS.ANALYZE_PROFILE)
   async handleAnalyzeProfile(job: BullJob<AnalyzeProfilePayload>) {

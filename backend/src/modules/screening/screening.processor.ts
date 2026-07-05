@@ -26,7 +26,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+
 
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -60,7 +60,6 @@ interface AiScoreResult {
 @Processor(QUEUE_NAMES.APPLICATION)
 export class ScreeningProcessor {
   private readonly logger = new Logger(ScreeningProcessor.name);
-  private readonly openai: OpenAI;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -68,11 +67,7 @@ export class ScreeningProcessor {
     private readonly config: ConfigService,
     @InjectQueue(QUEUE_NAMES.NOTIFICATIONS) private readonly notificationsQueue: Queue,
     @InjectQueue(QUEUE_NAMES.ANALYTICS)    private readonly analyticsQueue: Queue,
-  ) {
-    this.openai = new OpenAI({
-      apiKey: this.config.get<string>('OPENAI_API_KEY'),
-    });
-  }
+  ) {}
 
   // ── 1. AI Screening ──────────────────────────────────────────────────────
 
@@ -106,7 +101,7 @@ export class ScreeningProcessor {
         cultureFitScore: scoreResult.cultureFitScore,
         reasoning:       scoreResult.reasoning,
         rawAiResponse:   scoreResult as object,
-        modelUsed:       this.config.get<string>('OPENAI_MODEL', 'gpt-4o-mini'),
+        modelUsed:       'mock-ai',
       },
     });
 
@@ -298,59 +293,31 @@ export class ScreeningProcessor {
     jobRequirements?: string;
     coverLetter?: string;
   }): Promise<AiScoreResult> {
-    const systemPrompt = `You are an expert HR screening assistant for an Ethiopian hiring platform called Beleqet.
-Your task is to score a job application on a scale of 0-100 across three dimensions.
-Always respond ONLY with valid JSON, no markdown fences, no preamble.`;
+    this.logger.log(`[mock-ai] Simulating candidate screening for: ${input.jobTitle}`);
 
-    const userPrompt = `
-Job Title: ${input.jobTitle}
-Job Description: ${input.jobDescription}
-Requirements: ${input.jobRequirements ?? 'Not specified'}
-Candidate Cover Letter: ${input.coverLetter ?? 'Not provided'}
+    // Simulate AI processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-Score this application and return JSON with exactly this shape:
-{
-  "overallScore": <number 0-100>,
-  "skillScore": <number 0-100>,
-  "experienceScore": <number 0-100>,
-  "cultureFitScore": <number 0-100>,
-  "reasoning": "<2-3 sentence explanation of the scores>"
-}
-`;
+    // Generate realistic-looking scores based on whether a cover letter was provided
+    const hasCoverLetter = !!input.coverLetter && input.coverLetter.length > 50;
+    const baseScore = hasCoverLetter ? 72 : 58;
+    const variance = Math.floor(Math.random() * 20) - 5; // ±10
 
-    try {
-      const completion = await this.openai.chat.completions.create({
-        model: this.config.get<string>('OPENAI_MODEL', 'gpt-4o-mini'),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: userPrompt },
-        ],
-        temperature: 0.2,
-        max_tokens: 400,
-        response_format: { type: 'json_object' },
-      });
+    const overallScore    = Math.min(100, Math.max(0, baseScore + variance));
+    const skillScore      = Math.min(100, Math.max(0, baseScore + Math.floor(Math.random() * 15)));
+    const experienceScore = Math.min(100, Math.max(0, baseScore + Math.floor(Math.random() * 15) - 5));
+    const cultureFitScore = Math.min(100, Math.max(0, baseScore + Math.floor(Math.random() * 10)));
 
-      const raw = completion.choices[0]?.message?.content ?? '{}';
-      const parsed = JSON.parse(raw) as AiScoreResult;
-
-      // Clamp all scores to 0-100
-      return {
-        overallScore:    Math.min(100, Math.max(0, parsed.overallScore ?? 50)),
-        skillScore:      Math.min(100, Math.max(0, parsed.skillScore ?? 50)),
-        experienceScore: Math.min(100, Math.max(0, parsed.experienceScore ?? 50)),
-        cultureFitScore: Math.min(100, Math.max(0, parsed.cultureFitScore ?? 50)),
-        reasoning:       parsed.reasoning ?? '',
-      };
-    } catch (err) {
-      this.logger.warn(`OpenAI call failed, using fallback scoring: ${(err as Error).message}`);
-      // Fallback: neutral score so the application isn't auto-rejected
-      return {
-        overallScore: 50,
-        skillScore: 50,
-        experienceScore: 50,
-        cultureFitScore: 50,
-        reasoning: 'AI scoring unavailable — manual review required.',
-      };
-    }
+    return {
+      overallScore,
+      skillScore,
+      experienceScore,
+      cultureFitScore,
+      reasoning: `[Mock AI] Candidate scored ${overallScore}/100 for the ${input.jobTitle} role. ${
+        hasCoverLetter
+          ? 'The cover letter demonstrates relevant motivation and communication skills.'
+          : 'No cover letter was provided; a personalized letter could improve their score.'
+      } Manual review is recommended for borderline cases.`,
+    };
   }
 }
